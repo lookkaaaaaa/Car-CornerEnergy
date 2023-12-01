@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 dotenv.config({path:'config.env'});
 const dbConnection=require('./config/database');
 const userRoute=require('./routes/userRoute');
+const authRoute=require('./routes/authRoute');
 const locationRoute=require('./routes/locationRoute');
 const stationsRoute=require('./routes/stationsRoute');
 
@@ -32,6 +33,7 @@ console.log(`mode:${process.env.NODE_ENV}`);
 app.use('/api/v1/users',userRoute);
 app.use('/api/v1/locations',locationRoute);
 app.use('/api/v1/stations',stationsRoute);
+app.use('/api/v1/auth',authRoute);
 // app.use((err,req,res,next)=>{
 //     console.log(err);
 // })
