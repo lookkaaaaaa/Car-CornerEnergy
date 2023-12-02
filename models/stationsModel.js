@@ -11,7 +11,7 @@ const stationsSchema = new mongoose.Schema(
             type: Number,
             required: [true, 'Latitude is required'],
         },
-       StationName: {
+    StationName: {
             type: String,
             required: true,
         }

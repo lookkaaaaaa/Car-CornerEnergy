@@ -1,7 +1,20 @@
 const express=require('express');
-const{getLocations}=require('../services/LocationServices');
 const router = express.Router();
 
-router.post('/',getLocations);
+
+const {
+    getLocations,
+    getLocation,
+    createLocations,
+    updateLocation,
+    deleteLocation,
+    }  =require('../services/LocationServices');
+    
+    router.route('/').post(createLocations).get(getLocations);
+
+    router.route('/:name').get(getLocation,)
+    
+    router.route('/:id').put(updateLocation).delete(deleteLocation);
+    
 
 module.exports=router;

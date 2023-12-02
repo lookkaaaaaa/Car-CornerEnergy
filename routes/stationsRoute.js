@@ -1,7 +1,19 @@
 const express=require('express');
-const{getstations}=require('../services/stationsServices');
 const router = express.Router();
 
-router.post('/',getstations);
+const {
+    getStations,
+    getStation,
+    createStations,
+    updateStation,
+    deleteStation,
+    }  =require('../services/stationsServices');
+    
+    router.route('/').post(createStations).get(getStations);
+
+    router.route('/:name').get( getStation,)
+    
+    router.route('/:id').put(updateStation).delete(deleteStation);
+    
 
 module.exports=router;

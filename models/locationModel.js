@@ -11,7 +11,7 @@ const locationSchema = new mongoose.Schema(
             type: Number,
             required: [true, 'Latitude is required'],
         },
-        Location: {
+        name: {
             type: String,
             required: [true, 'Name of location is required'],
         },
