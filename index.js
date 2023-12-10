@@ -7,7 +7,7 @@ const dbConnection=require('./config/database');
 const userRoute=require('./routes/userRoute');
 const authRoute=require('./routes/authRoute');
 const locationRoute=require('./routes/locationRoute');
-const stationsRoute=require('./routes/stationsRoute');
+const stationRoute2  =require('./routes/stationRoute2');
 
 
 const errorHandler = require('./Middleware/error-handler');
@@ -32,7 +32,7 @@ console.log(`mode:${process.env.NODE_ENV}`);
 //.. mountRoutes
 app.use('/api/v1/users',userRoute);
 app.use('/api/v1/locations',locationRoute);
-app.use('/api/v1/stations',stationsRoute);
+app.use('/api/v1/stations',stationRoute2 );
 app.use('/api/v1/auth',authRoute);
 // app.use((err,req,res,next)=>{
 //     console.log(err);
@@ -45,3 +45,8 @@ app.listen(PORT,()=>{
     console.log(`App running on port ${PORT}`);
 
 });
+
+// //create index 
+// db.stations.createIndex({"attributeName" : "2dSphare"});
+
+// //Query 

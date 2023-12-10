@@ -1,0 +1,67 @@
+Momngo *Compass* some Queries:   ============>
+
+open   _MONGOSH>
+
+#################################
+
+For DB ====> use db_name  
+For Collection ======> db.collec_name.find()                   (db: keyword)
+  
+for create index ======> db.collec_name.createIndex({"attributeName" : }); *Screaan**
+
+To create a 2dsphere index, specify the string 2dsphere as the index type: ======> #######
+
+db.<collection>.createIndex( { <location field> : "2dsphere" } )
+
+
+for nearest distance =====>
+
+db.collec_name.find(
+   {
+     "location" : {
+        $near : {
+          
+            $geometry: { type: "Point",  coordinates: [ -73.9667, 40.78 ] },
+            $minDistance: 1000,
+            $maxDistance: 5000
+          }
+       }
+   })
+
+
+*************************************************************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
