@@ -1,4 +1,5 @@
 const express=require('express');
+
 const router = express.Router();
 
 
@@ -12,7 +13,7 @@ const {
     
     router.route('/').post(createLocations).get(getLocations);
 
-    router.route('/:name').get(getLocation,)
+    router.route('/:name').get(getLocation)
     
     router.route('/:id').put(updateLocation).delete(deleteLocation);
     

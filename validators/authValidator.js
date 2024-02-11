@@ -1,30 +1,25 @@
-const { check, validationResult } = require('express-validator');
-const asyncHandler = require('express-async-handler');
-const User = require('../models/userModel'); 
-
-const validatorMiddleware = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  next();
-};
+const { check } = require('express-validator');
+const validatorMiddleware = require('../Middleware/validatorMiddleware');
+const User = require('../models/userModel');
 
 exports.signupValidator = [
   check('name')
-    .notEmpty().withMessage(' name is required')
-    .isLength({ min: 3 }).withMessage('Too short User name'),
+    .notEmpty().withMessage('User required'),
 
   check('email')
     .notEmpty().withMessage('Email required')
     .isEmail().withMessage('Invalid email address')
-    .custom(async (val) => {
-      
-    }),
+    .custom((val) =>
+      User.findOne({ email: val }).then((user) => {
+        if (user) {
+          return Promise.reject(new Error('E-mail already in user'));
+        }
+      })
+    ),
 
   check('password')
     .notEmpty().withMessage('Password required')
-    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
     .custom((password, { req }) => {
       if (password !== req.body.passwordConfirm) {
         throw new Error('Password Confirmation incorrect');
@@ -35,11 +30,16 @@ exports.signupValidator = [
   check('passwordConfirm')
     .notEmpty().withMessage('Password confirmation required'),
 
-  check('phone')
+    check('phone')
     .optional()
-    .isMobilePhone(['ar-EG']).withMessage('Invalid Number'),
+    .isMobilePhone(['ar-EG', 'ar-SA']).withMessage('Invalid phone number only accepted Egy and SA Phone numbers'),
 
-  validatorMiddleware,
+    check('carType')
+    .notEmpty().withMessage('carType required'),
+
+    check('role').optional(),
+
+  validatorMiddleware,                       // To catch Error
 ];
 
 exports.loginValidator = [
@@ -49,7 +49,7 @@ exports.loginValidator = [
 
   check('password')
     .notEmpty().withMessage('Password required')
-    .isLength({ min: 8}).withMessage('Password must be at least 8 characters'),
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
 
   validatorMiddleware,
 ];
