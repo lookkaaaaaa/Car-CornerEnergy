@@ -1,22 +1,27 @@
-const express=require('express');
+const express = require('express');
 const router = express.Router();
+const authService = require('../services/authServices');
+const { getStations, getStation, createStations, updateStation, deleteStation,getNearestStation} = require('../services/stationService2');
 
-const {
-    getStations,
-    getStation,
-    createStations,
-    updateStation,
-    deleteStation,
-    }  =require('../services/stationService2');
+// Middleware for authentication and authorization
+const protectAndAuthorize = [authService.protect, authService.allowedTo('admin', 'manager')];
 
 
-    const authService = require('../services/authServices');
-//1. authService.protect===> elly hy3ml create lazm ykon logged in 
-//2. authService.allowedTo('admin', 'manager')   ===> lazm Admin 
-    router.route('/').post(authService.protect, authService.allowedTo('admin', 'manager') ,createStations); //Admin
+// Create station (Admin only)
+router.route('/').post(protectAndAuthorize, createStations);
 
-    router.route('/').get(getStations);
-    router.route('/:name').get( getStation,); 
-    router.route('/:id').put(updateStation).delete(deleteStation);
+// Get all stations
+//router.route('/getAllStations').get(getStations);
 
-module.exports=router;
+// Get specific station by name
+//router.route('/:name').get(getStation);
+
+// Update station by ID
+router.route('/:id').put(updateStation);
+
+// Delete station by ID
+router.route('/:id').delete(deleteStation);
+
+//getNearest
+router.route('/nearestStation').get(getNearestStation);
+module.exports = router;

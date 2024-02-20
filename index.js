@@ -9,6 +9,7 @@ const authRoute=require('./routes/authRoute');
 const locationRoute=require('./routes/locationRoute');
 const stationRoute2  =require('./routes/stationRoute2');
 const couponRoute  =require('./routes/couponsRoute');
+//const nearStationRoute  =require('./routes/nearStationRoute');
 
 
 const errorHandler = require('./Middleware/error-handler');
@@ -35,6 +36,8 @@ app.use('/api/v1/locations',locationRoute);
 app.use('/api/v1/stations',stationRoute2 );
 app.use('/api/v1/auth',authRoute);
 app.use('/api/v1/coupons',couponRoute );
+
+//app.use('/api/v1/nearestStation1',nearStationRoute);
 // app.use((err,req,res,next)=>{
 //     console.log(err);
 // })
