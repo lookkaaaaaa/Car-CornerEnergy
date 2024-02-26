@@ -37,6 +37,11 @@ const UserSchema = new mongoose.Schema({
         enum: ['user', 'admin'],
         default: 'user',
     },
+
+    active: {                                  //for delete user ---> active = false
+        type: Boolean,
+        default: true,       //default true##
+    },
 }, { timestamps: true });
 
 // hash pass on create
