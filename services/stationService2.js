@@ -65,55 +65,55 @@ exports.getStation = asyncHandler(async (req, res) => {
 
 // get neareststation
 
-exports.getNearestStation = asyncHandler(async (req, res) => {
-    return "test";
-    const { userLat, userLong } = req.query;
-    if (!userLat || !userLong) {
-        
-        return res.status(400).json({ msg: "User latitude and longitude are required." });
+exports.findNearbyStations = async (req, res) => {
+
+    const { userLat, userLong, minDistance, maxDistance } = req.query;
+
+    if (!userLat || !userLong || !minDistance || !maxDistance) {
+        return res.status(400).json({ msg: "User latitude, longitude, minDistance, and maxDistance are required." });
     }
 
-    const stations = await stationsModel2.find({});
-    if (stations.length === 0) {
-        return res.status(404).json({ msg: "No stations found." });
+    try {
+        const stations = await stationsModel2.find({
+            "station.coordinates": {
+                $near: {
+                    $geometry: { type: "Point", coordinates: [parseFloat(userLong), parseFloat(userLat)] },
+                    $minDistance: parseInt(minDistance),
+                    $maxDistance: parseInt(maxDistance)
+                }
+            }
+        });
+
+        res.status(200).json({ data: stations });
+    } catch (error) {
+        console.error("Error finding nearby stations:", error);
+        res.status(500).json({ msg: "Internal server error" });
+    }
+};
+
+exports.pinStationOnMap = async (req , res)=>{
+
+   const {StationName, coordinates} = req.body; 
+   try {
+    if (!Array.isArray(coordinates) || coordinates.length !== 2) {
+        throw new Error("Coordinates must be an array with two elements [longitude, latitude].");
     }
 
-    let nearestStation = null;
-    let maxCosineSimilarity = -Infinity;
-
-    stations.forEach(station => {
-        const stationVector = [station.coordinates[0], station.coordinates[1]]; // Latitude and longitude as vector
-        const userVector = [parseFloat(userLat), parseFloat(userLong)]; // User's location as vector
-
-        const cosineSimilarity = calculateCosineSimilarity(stationVector, userVector);
-        
-        if (cosineSimilarity > maxCosineSimilarity) {
-            maxCosineSimilarity = cosineSimilarity;
-            nearestStation = station;
-        }
+    const station = await stationsModel2.create({
+        station: {
+            type: "Point",
+            coordinates: coordinates,
+        },
+        StationName: `${StationName}`,
     });
 
-    if (!nearestStation) {
-        return res.status(404).json({ msg: "No nearest station found." });
-    }
-
-    res.status(StatusCodes.OK).json({ data: nearestStation, cosineSimilarity: maxCosineSimilarity });
-});
-
-function calculateCosineSimilarity(vector1, vector2) {
-    // Calculate dot product
-    let dotProduct = 0;
-    for (let i = 0; i < vector1.length; i++) {
-        dotProduct += vector1[i] * vector2[i];
-    }
-
-    // Calculate magnitudes
-    const magnitude1 = Math.sqrt(vector1.reduce((sum, value) => sum + Math.pow(value, 2), 0));
-    const magnitude2 = Math.sqrt(vector2.reduce((sum, value) => sum + Math.pow(value, 2), 0));
-
-    // Calculate cosine similarity
-    return dotProduct / (magnitude1 * magnitude2);
+    console.log("Station location pinned successfully");
+    return res.status(201).json({ message: "Station pinned successfully", station });
+} catch (error) {
+    console.error(`Error pinning Station on map for Station ${StationName}: ${error.message}`);
+    return res.status(500).json({ message: "Internal server error" });
 }
+};
 //delete station ======================================================================
 exports.deleteStation = asyncHandler(async (req, res) => {
     const { id } = req.params;

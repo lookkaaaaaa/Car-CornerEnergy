@@ -1,93 +1,75 @@
-//const crypto = require('crypto');
-
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../Middleware/ApiError');
-//const sendEmail = require('../utils/sendEmail');
 const User = require('../models/userModel');
 
-// @desc    Signup
-// @route   GET /api/v1/auth/signup
-// @access  Public
+// Signup
 exports.signup = asyncHandler(async (req, res, next) => {
-  // 1- Create user
-  const user = await User.create({
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    phone: req.body.phone,
-    carType: req.body.carType,
-    role: req.body.role,
-  });
+  const { name, email, password, phone, carType, role } = req.body;
 
-  // 2- Generate token
-  const token = jwt.sign({userId : user._id} ,  process.env.JWT_SECRET_KEY, {expiresIn : process.env.JWT_EXPIRE_TIME,}
-    );
-  // 4) send response to client side
-  res.status(201).json({ data : user, token });
+  const user = await User.create({ name, email, password, phone, carType, role });
+
+  const token = generateToken(user._id);
+
+  res.status(201).json({ data: user, token });
 });
 
-// @desc    Login
-// @route   GET /api/v1/auth/login
-  exports.login = asyncHandler(async (req, res, next) => {
-  // 1) check if password and email in the body (authValidation)
-  // 2) check if user exist & check if password is correct
-  const user = await User.findOne({ email: req.body.email });
+// Login
+exports.login = asyncHandler(async (req, res, next) => {
+  const { email, password } = req.body;
 
-    if (!user || !(await bcrypt.compare(req.body.password, user.password))) {
+  const user = await User.findOne({ email });
+
+  if (!user || !(await bcrypt.compare(password, user.password))) {
     return next(new ApiError('Incorrect email or password', 401));
   }
-  // 3) generate token
-  const token = jwt.sign({userId : user._id} ,  process.env.JWT_SECRET_KEY, {expiresIn : process.env.JWT_EXPIRE_TIME,}
-    );
-  // 4) send response to client side
+
+  const token = generateToken(user._id);
+
   res.status(200).json({ data: user, token });
 });
 
-
-
-// @desc   make sure the user is logged in 
+// Middleware to protect routes
 exports.protect = asyncHandler(async (req, res, next) => {
-  // 1) Check if token exist, if exist get
   let token;
-  if (
-    req.headers.authorization /*&&  req.headers.authorization.startsWith('Bearer')*/) {
+  
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
+
   if (!token) {
-    return next(
-      new ApiError('You are not login, Please login to get access this route',401)
-    );
+    return next(new ApiError('You are not logged in. Please log in to access this route', 401));
   }
 
-  // 2) Verify token (no change happens, expired token)
-  const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-  console.log(decoded);
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const currentUser = await User.findById(decoded.userId);
 
-  // 3) Check if user exists
-  const currentUser = await User.findById(decoded.userId);
-  if (!currentUser) {
-    return next(
-      new ApiError('The user that belong to this token does no longer exist',401)
-    );
+    if (!currentUser) {
+      return next(new ApiError('The user belonging to this token does not exist', 401));
+    }
+
+    req.user = currentUser;
+    next();
+  } catch (error) {
+    return next(new ApiError('Invalid token. Please log in again', 401));
   }
-  req.user = currentUser;
-  next();
 });
 
-
-//  Authorization (User Permissions)
-// ["admin", "manager"]
-exports.allowedTo = (...roles) =>                        //...roles ==> array
-  asyncHandler(async (req, res, next) => {
-    // 1) access roles
-    // 2) access registered user (req.user.role)
+// Authorization middleware
+exports.allowedTo = (...roles) => {
+  return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return next(
-        new ApiError('You are not allowed to access this route', 403)
-      );
+      return next(new ApiError('You are not authorized to access this route', 403));
     }
     next();
+  };
+};
+
+// Function to generate JWT token
+function generateToken(userId) {
+  return jwt.sign({ userId }, process.env.JWT_SECRET_KEY, {
+    expiresIn: process.env.JWT_EXPIRE_TIME
   });
+}
