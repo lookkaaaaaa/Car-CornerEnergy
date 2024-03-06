@@ -1,10 +1,14 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../Middleware/ApiError');
 const User = require('../models/userModel');
+const sendEmail = require('../utils/sendEmail');
 
-// Signup
+
+// @desc    Signup
+// @route   GET /api/v1/auth/signup
 exports.signup = asyncHandler(async (req, res, next) => {
   const { name, email, password, phone, carType, role } = req.body;
 
@@ -14,6 +18,7 @@ exports.signup = asyncHandler(async (req, res, next) => {
 
   res.status(201).json({ data: user, token });
 });
+
 
 // Login
 exports.login = asyncHandler(async (req, res, next) => {
@@ -30,7 +35,9 @@ exports.login = asyncHandler(async (req, res, next) => {
   res.status(200).json({ data: user, token });
 });
 
-// Middleware to protect routes
+
+//protect Handler
+// @desc   make sure the user is logged in 
 exports.protect = asyncHandler(async (req, res, next) => {
   let token;
   
@@ -64,12 +71,110 @@ exports.allowedTo = (...roles) => {
       return next(new ApiError('You are not authorized to access this route', 403));
     }
     next();
-  };
-};
+  }};
 
-// Function to generate JWT token
-function generateToken(userId) {
-  return jwt.sign({ userId }, process.env.JWT_SECRET_KEY, {
-    expiresIn: process.env.JWT_EXPIRE_TIME
+
+// @desc    Forgot password
+// @route   POST /api/v1/auth/forgotPassword
+// @access  Public
+exports.forgotPassword = asyncHandler(async (req, res, next) => {
+  // 1) Get user by email
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(
+      new ApiError(`There is no user with that email ${req.body.email}`, 404)
+    );
+  }
+  // 2) If user exist, Generate hash reset random 6 digits and save it in db
+  const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const hashedResetCode = crypto
+    .createHash('sha256')
+    .update(resetCode)
+    .digest('hex');
+
+  // Save hashed password reset code into db
+  user.passwordResetCode = hashedResetCode;
+  // Add expiration time for password reset code (10 min)
+  user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+  user.passwordResetVerified = false;
+
+  await user.save();
+
+  // 3) Send the reset code via email <sendEmail>
+  const message = `Hi ${user.name},\n We received a request to reset the password on your CCE Accont. \n ${resetCode} \n Enter this code to complete the reset. \n Thanks for helping us keep your account secure.\n The CCE Team`;
+  try {
+    await sendEmail({        //mailOpts
+      email: user.email,
+      subject: 'Your password reset code (valid for 10 min)',
+      message,
+    });
+  } catch (err) {
+    user.passwordResetCode = undefined;
+    user.passwordResetExpires = undefined;
+    user.passwordResetVerified = undefined;
+
+    await user.save();
+    return next(new ApiError('There is an error in sending email', 500));
+  }
+
+  res           // ===> response mn postMan en kolo 48al w mfe4 Error
+    .status(200)
+    .json({ status: 'Success', message: 'Reset code sent to email' });
+});
+
+
+// @desc    Verify password reset code
+// @route   POST /api/v1/auth/verifyResetCode
+exports.verifyPassResetCode = asyncHandler(async (req, res, next) => {
+  // 1) Get user based on reset code
+  const hashedResetCode = crypto      //hashing resetCode to find in DB
+    .createHash('sha256')
+    .update(req.body.resetCode) //hashing body resetCode
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetCode: hashedResetCode,
+    passwordResetExpires: { $gt: Date.now() },     //$gt = greater than
   });
-}
+
+  // if Reset code Invalid
+  if (!user) {
+    return next(new ApiError('Reset code invalid or expired'));
+  }
+
+  // 2)if  Reset code valid
+  user.passwordResetVerified = true;
+  await user.save();
+  //response
+  res.status(200).json({status: 'Success',});
+});
+
+
+// @desc    Reset password
+// @route   put /api/v1/auth/resetPassword
+exports.resetPassword = asyncHandler(async (req, res, next) => {
+  // 1) Get user based on *email*
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(
+      new ApiError(`There is no user with email ${req.body.email}`, 404)
+    );
+  }
+
+  // 2) Check if reset code verified [true or false]
+  if (!user.passwordResetVerified) {
+    return next(new ApiError('Reset code not verified', 400));
+  }
+
+  user.password = req.body.newPassword;  //from body
+  user.passwordResetCode = undefined;
+  user.passwordResetExpires = undefined;
+  user.passwordResetVerified = undefined;
+
+  await user.save();
+
+  // 3) if everything is ok, generate new token, 34an el_token el2dem changed 
+  const token = jwt.sign({userId : user._id} ,  process.env.JWT_SECRET_KEY, {expiresIn : process.env.JWT_EXPIRE_TIME,}
+    );
+  res.status(200).json({ token });
+});

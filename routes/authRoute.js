@@ -9,15 +9,15 @@ const {
 const {
   signup,
   login,
-  //forgotPassword,
-  //verifyPassResetCode,
-  //resetPassword,
+  forgotPassword,
+  verifyPassResetCode,
+  resetPassword,
 } = require('../services/authServices');
 
 router.post('/signup', signupValidator, signup);
 router.post('/login', loginValidator, login);
-// router.post('/forgotPassword', forgotPassword);
-// router.post('/verifyResetCode', verifyPassResetCode);
-// router.put('/resetPassword', resetPassword);
+router.post('/forgotPassword', forgotPassword);
+router.post('/verifyResetCode', verifyPassResetCode);
+router.put('/resetPassword', resetPassword);
 
 module.exports = router;

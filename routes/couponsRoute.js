@@ -12,7 +12,7 @@ const {
 const authService = require('../services/authServices');
 //1. authService.protect===> elly hy3ml create lazm ykon logged in 
 //2. authService.allowedTo('admin', 'manager')   ===> lazm Admin 
-router.route('/').post(authService.protect, authService.allowedTo('admin', 'manager') ,createcoupon); //Admin
+router.route('/').post(authService.protect, authService.allowedTo('admin', 'manager') ,createcoupon); //Admin only
 
 router.route('/').get(getCoupons);
 router.route('/:name').get(getCoupon);

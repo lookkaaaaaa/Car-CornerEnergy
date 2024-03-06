@@ -19,7 +19,10 @@ const UserSchema = new mongoose.Schema({
         required: [true, 'Password is required'],
         minlength: [8, 'Password must contain numbers and letters and at least 8 characters'],
     },
-
+    passwordResetCode: String,
+    passwordResetExpires: Date,
+    passwordResetVerified: Boolean,
+    
     phone: {
         type: String,
         minlength: [11, 'Phone number should be 11 numbers'],
@@ -34,6 +37,11 @@ const UserSchema = new mongoose.Schema({
         type: String,
         enum: ['user', 'admin'],
         default: 'user',
+    },
+
+    active: {                                  //for delete user ---> active = false
+        type: Boolean,
+        default: true,       //default true##
     },
 }, { timestamps: true });
 
