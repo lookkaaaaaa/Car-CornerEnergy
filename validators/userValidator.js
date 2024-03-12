@@ -52,7 +52,7 @@ exports.getUserValidator = [
 ];
 
 exports.updateUserValidator = [
-    check('id').isMongoId().withMessage('Invalid User id format'),
+    //check('id').isMongoId().withMessage('Invalid User id format'),
     body('name')
     .optional()
     .custom((val, { req }) => {

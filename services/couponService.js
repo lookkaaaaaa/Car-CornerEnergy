@@ -16,13 +16,13 @@ exports.createcoupon=asyncHandler( async(req,res)=>{
     });
 }); 
 
-//get  =====================================================================
+//get  =====================================================================(Admin)
 exports.getCoupons = asyncHandler(async (req, res) => {
     const coupons = await couponModel.find({});
     res.status(200).json({ results: coupons.length, data: coupons });
 });
 
-//get  specific coupon ==========================================================
+//get  specific coupon ==========================================================(Admin)
 //GET /api/v1/coupons/:name
 exports.getCoupon = asyncHandler(async (req, res) => {
 
@@ -34,7 +34,7 @@ exports.getCoupon = asyncHandler(async (req, res) => {
     res.status(200).json({ data: coupon });
 }); 
 
-// update  ===================================================================
+// update  ===================================================================(Admin)
 //PUT /api/v1/coupons/id
 exports.updateCoupon = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -52,7 +52,7 @@ exports.updateCoupon = asyncHandler(async (req, res) => {
     }
     res.status(200).json({ data: coupon });
 });
-//delete  ======================================================================
+//delete  ======================================================================(Admin)
 //DELETE /api/v1/coupons/:id
 exports.deleteCoupon = asyncHandler(async (req, res) => {
     const { id } = req.params;

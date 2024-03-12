@@ -5,7 +5,7 @@ const asyncHandler = require('express-async-handler');
 const ApiError = require('../Middleware/ApiError');
 const User = require('../models/userModel');
 const sendEmail = require('../utils/sendEmail');
-
+const createToken = require('../utils/createToken');
 
 // @desc    Signup
 // @route   GET /api/v1/auth/signup
@@ -14,8 +14,8 @@ exports.signup = asyncHandler(async (req, res, next) => {
 
   const user = await User.create({ name, email, password, phone, carType, role });
 
-  const token = generateToken(user._id);
-
+  // 2) Generate token
+  const token = createToken(user._id);
   res.status(201).json({ data: user, token });
 });
 
@@ -30,7 +30,8 @@ exports.login = asyncHandler(async (req, res, next) => {
     return next(new ApiError('Incorrect email or password', 401));
   }
 
-  const token = generateToken(user._id);
+  // 2) Generate token
+  const token = createToken(user._id);
 
   res.status(200).json({ data: user, token });
 });
