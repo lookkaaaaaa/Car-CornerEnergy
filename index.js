@@ -1,4 +1,5 @@
 const express =require('express');
+const paymentRoute = require('./routes/paymentRoute');
 const dotenv=require('dotenv');
 const morgan =require('morgan');
 const mongoose = require('mongoose');
@@ -36,6 +37,7 @@ app.use('/api/v1/locations',locationRoute);
 app.use('/api/v1/stations',stationRoute2 );
 app.use('/api/v1/auth',authRoute);
 app.use('/api/v1/coupons',couponRoute );
+app.use('/api/v1/payment', paymentRoute);
 
 //app.use('/api/v1/nearestStation1',nearStationRoute);
 // app.use((err,req,res,next)=>{
